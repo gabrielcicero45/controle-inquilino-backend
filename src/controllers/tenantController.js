@@ -10,10 +10,10 @@ exports.getAllTenants = async (req, res) => {
 };
 
 exports.createTenant = async (req, res) => {
-    const { name, cpf, kitnetSize, isDeliquent, deliquencyTime, rentAmount } = req.body;
+    const { name, cpf, kitnetSize, isDelinquent, delinquencyTime, rentAmount } = req.body;
 
     try {
-        const newTenant = new Tenant({ name, cpf, kitnetSize, isDeliquent, deliquencyTime, rentAmount });
+        const newTenant = new Tenant({ name, cpf, kitnetSize, isDelinquent, delinquencyTime, rentAmount });
         await newTenant.save();
         res.status(201).json(newTenant);
     } catch (err) {
@@ -21,13 +21,25 @@ exports.createTenant = async (req, res) => {
     }
 };
 
-exports.updateTenant = async (req, res) => {
+exports.getTenant = async (req, res) => {
     const { tenantId } = req.params;
-    const { name, cpf, kitnetSize, isDeliquent, deliquencyTime, rentAmount } = req.body;
+    const { name, cpf, kitnetSize, isDelinquent, delinquencyTime, rentAmount } = req.body;
 
     try {
+        const tenant = await Tenant.findById(tenantId);
+        res.json(tenant);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.updateTenant = async (req, res) => {
+    const { tenantId } = req.params;
+    const { name, cpf, kitnetSize, isDelinquent, delinquencyTime, rentAmount } = req.body;
+    
+    try {
         const tenant = await Tenant.findByIdAndUpdate(tenantId, {
-            name, cpf, kitnetSize, isDeliquent, deliquencyTime, rentAmount
+            name, cpf, kitnetSize, isDelinquent, delinquencyTime, rentAmount
         }, { new: true });
         res.json(tenant);
     } catch (err) {
@@ -47,14 +59,23 @@ exports.deleteTenant = async (req, res) => {
 };
 
 
-exports.calculateDeliquency = async (req, res) => {
+exports.calculateDelinquency = async (req, res) => {
     try {
-        const tenants = await Tenant.find({ isDeliquent: true });
+        const delinquentTenants = await Tenant.find({ isDelinquent: true });
+        const upToDateTenants = await Tenant.find({ isDelinquent: false });
         const totalTenants = await Tenant.countDocuments();
-        const delinquentTenants = tenants.length;
-        const deliquencyPercentage = (delinquentTenants / totalTenants) * 100;
+        
+        const delinquencyPercentage = (delinquentTenants.length / totalTenants) * 100;
+        const damage = delinquentTenants.reduce((total, tenant) => {
+            const amountOwed = tenant.delinquencyTime * tenant.rentAmount;
+            return total + amountOwed;
+        }, 0);
+        const income = upToDateTenants.reduce((total, tenant) => {
+            const amountEarned = tenant.rentAmount;
+            return total + amountEarned;
+        }, 0);
 
-        res.json({ deliquencyPercentage, tenants });
+        res.json({ delinquencyPercentage, tenants: delinquentTenants, income, damage });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
