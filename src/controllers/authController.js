@@ -19,6 +19,18 @@ exports.login = async (req, res) => {
     res.json({ token });
 };
 
+exports.getUser = async (req, res) => {
+  try {
+      const user = await User.findById(req.userId).select('-password');
+      if (!user) {
+          return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+      res.json(user);
+  } catch (err) {
+      res.status(500).json({ message: 'Erro ao buscar usuário' });
+  }
+};
+
 exports.register=  async (req, res) => {
     const { name, email, password } = req.body;
   
