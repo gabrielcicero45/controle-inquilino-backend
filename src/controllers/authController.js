@@ -27,11 +27,12 @@ exports.getUser = async (req, res) => {
       }
       res.json(user);
   } catch (err) {
+      console.error("Erro ao buscar usuário:", error);
       res.status(500).json({ message: 'Erro ao buscar usuário' });
   }
 };
 
-exports.register=  async (req, res) => {
+exports.register = async (req, res) => {
     const { name, email, password } = req.body;
   
     if (!name || !email || !password) {

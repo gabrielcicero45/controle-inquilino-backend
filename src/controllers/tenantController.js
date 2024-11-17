@@ -17,6 +17,7 @@ exports.createTenant = async (req, res) => {
         await newTenant.save();
         res.status(201).json(newTenant);
     } catch (err) {
+        console.error('Error:', err);
         res.status(400).json({ message: err.message });
     }
 };

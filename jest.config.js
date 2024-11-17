@@ -1,5 +1,7 @@
 module.exports = {
+    preset: '@shelf/jest-mongodb',
     testEnvironment: 'node',
-    setupFilesAfterEnv: ['<rootDir>/test/setup.js'],
+    verbose: true,
+    collectCoverage: true,
     testTimeout: 30000,
   };
